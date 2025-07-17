@@ -1,0 +1,82 @@
+:root {
+    --color-primary: #394867;
+    --color-accent: #6C63FF;
+    --color-bg: #F5F7FA;
+    --color-text: #1E1E2F;
+    --color-text-muted: #6B7280;
+    --color-success: #22C55E;
+    --color-danger: #EF4444;
+}
+body {
+    overflow-x: hidden;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'Segoe UI', sans-serif;
+}
+.sidebar {
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    color: white;
+    padding-top: 50px;
+    background-color: var(--color-primary);
+}
+
+.sidebar a {
+    color: white;
+    text-decoration: none;
+    display: block;
+    padding: 10px 20px;
+}
+.sidebar a:hover {
+    background-color: #2f3e57;
+}
+li{
+    list-style:none;
+}
+
+
+.content {
+    margin-left: 250px;
+    padding: 20px;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+}
+.content h1, .content h2 {
+    color: #212529;
+    font-weight: 600;
+}
+
+.card {
+    border-radius: 0.5rem;
+    background-color: white;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary {
+    background-color: var(--color-accent);
+    border: none;
+    color: white;
+}
+.btn-danger {
+    background-color: var(--color-danger);
+    border: none;
+    color: white;
+}
+
+.btn-success {
+    background-color: var(--color-success);
+    border: none;
+    color: white;
+}
+h1, h2, h3 {
+    color: var(--color-text);
+}
+p, small {
+    color: var(--color-text-muted);
+}
+
