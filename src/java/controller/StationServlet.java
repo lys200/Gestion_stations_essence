@@ -9,11 +9,12 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
 import model.StationModel;
 import traitement.StationDAO;
 
@@ -23,8 +24,9 @@ import traitement.StationDAO;
  */
 @WebServlet(name = "StationServlet", urlPatterns = {"/StationServlet"})
 public class StationServlet extends HttpServlet {
-    StationModel stmodel = null;
+
     StationDAO stdao = null;
+
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -42,7 +44,7 @@ public class StationServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet StationServlet</title>");            
+            out.println("<title>Servlet StationServlet</title>");
             out.println("</head>");
             out.println("<body>");
             out.println("<h1>Servlet StationServlet at " + request.getContextPath() + "</h1>");
@@ -63,12 +65,21 @@ public class StationServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-//        processRequest(request, response);
+        String action = null;
+        action = request.getParameter("action");
 
-    response.getWriter().println("StationServlet appelé !");
+        if (action != null) {
+            switch (action) {
+                case "Modifier":
+                    modifierStation(request, response);
+                    break;
+                default:
+                    load(request, response);
+            }
+        } else {
+            load(request, response);
+        }
 
-
-              System.out.println("StationServlet appelé !"); 
     }
 
     /**
@@ -82,34 +93,103 @@ public class StationServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        enregistrerStation(request, response);
+        String action = request.getParameter("action");
+        if (action != null) {
+            switch (action) {
+                case "Ajouterstation":
+                    enregistrerStation(request, response);
+                    break;
+                case "Modifier":
+                    modifierStation(request, response);
+                    break;
+                default:
+                    load(request, response);
+            }
+        } else {
+            load(request, response);
+        }
     }
-    
-    protected void enregistrerStation(HttpServletRequest request, HttpServletResponse response) 
-            throws ServletException, IOException{
-        
+
+    protected void load(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            stdao = new StationDAO();
+            List<StationModel> lstat = stdao.lister();
+            request.setAttribute("stations", lstat);
+            request.getRequestDispatcher("/station/index.jsp").forward(request, response);
+
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(StationServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+//    methode enregistrer capacite de stock de gaz 
+
+    protected void enregistrerStation(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        StationModel stmodel = null;
+        StationDAO stdao = null;
 //        creer une instance de StationModel
         stmodel = new StationModel();
-//        recuperation des valeurs du foemulaire avec getParameter
+//        recuperation des valeurs du formulaire avec getParameter
         stmodel.setAdresseGeog(request.getParameter("adresse"));
-        double capacite = request.getParameter("capaciteGazoline") != null 
-                ? Double.parseDouble(request.getParameter("capaciteGazoline")): 0.0;
+        double capacite = request.getParameter("capaciteGazoline") != null
+                ? Double.parseDouble(request.getParameter("capaciteGazoline")) : 0.0;
         stmodel.setCapaciteStockGasoline(capacite);
-        double capDies = request.getParameter("capaciteDiesel") != null ?
-                Double.parseDouble(request.getParameter("capaciteDiesel")): 0.0;
+        double capDies = request.getParameter("capacitediesel") != null
+                ? Double.parseDouble(request.getParameter("capacitediesel")) : 0.0;
         stmodel.setCapaciteStockDiesel(capDies);
-        
-        int qteGaz = request.getParameter("qtegazo") != null ?
-                Integer.parseInt(request.getParameter("qtegazo")) : 0;
-        stmodel.setQuantiteGAsoline(qteGaz);
-        int qted = request.getParameter("qteDiesel") != null ?
-                Integer.parseInt(request.getParameter("qteDiesel")) : 0;
+
+        int qteGaz = request.getParameter("qtegazo") != null
+                ? Integer.parseInt(request.getParameter("qtegazo")) : 0;
+        stmodel.setQuantiteGasoline(qteGaz);
+        int qted = request.getParameter("qteDiesel") != null
+                ? Integer.parseInt(request.getParameter("qteDiesel")) : 0;
         stmodel.setQuantiteDiesel(qted);
 //        creer une instance de StationDAO
         stdao = new StationDAO();
         try {
-            if(stdao.enregistrer(stmodel) > 0){
-                request.getRequestDispatcher("/Stations/ajouterStation.jsp").forward(request, response);
+            if (stdao.enregistrer(stmodel) > 0) {
+                load(request, response);
+                request.getRequestDispatcher("/station/index.jsp").forward(request, response);
+            }
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(StationServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    //    methode modifier capacite de stock de gaz 
+    protected void modifierStation(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        try {
+            String id = request.getParameter("id");
+            //        creer une instance de StationModel
+            StationDAO stdao = new StationDAO();
+            StationModel stmodel = stdao.rechercher(id);
+
+//        recuperation des valeurs du foemulaire avec getParameter
+            String capacite = (request.getParameter("capaciteGasoline"));
+            if (capacite != null) {
+                double cap = Double.parseDouble(capacite);
+                stmodel.setCapaciteStockGasoline(cap);
+            }
+//                ? Double.parseDouble(request.getParameter("capaciteGazoline")) : 0.0;
+
+            double capDies = request.getParameter("capacitediesel") != null
+                    ? Double.parseDouble(request.getParameter("capacitediesel")) : 0.0;
+            stmodel.setCapaciteStockDiesel(capDies);
+            stmodel.setIdStation(id);
+//        creer une instance de StationDAO
+
+            try {
+
+                if (stdao.modifier(stmodel) > 0) {
+//                    load(request, response);
+                    request.setAttribute("stations", stmodel);
+                    request.getRequestDispatcher("/station/modifier.jsp").forward(request, response);
+                }
+            } catch (ClassNotFoundException | SQLException ex) {
+                Logger.getLogger(StationServlet.class.getName()).log(Level.SEVERE, null, ex);
             }
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(StationServlet.class.getName()).log(Level.SEVERE, null, ex);

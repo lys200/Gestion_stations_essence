@@ -13,8 +13,9 @@ import java.util.List;
  */
 public interface IDAOStation <T> {
     int enregistrer(T e) throws ClassNotFoundException, SQLException;
+    T rechercher(String id) throws ClassNotFoundException, SQLException;
     int modifier(T e) throws ClassNotFoundException, SQLException;
-    List<T> lister();
-    int ListequantiteGAzDispo(T e);
+    List<T> lister() throws ClassNotFoundException, SQLException;
+    int ListequantiteGAzDispoParPourcentage(T e) ;
     
 }

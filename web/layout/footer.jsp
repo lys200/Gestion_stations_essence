@@ -1,8 +1,8 @@
-
-    
-    
-        <script src="${pageContext.request.contextPath}/JS/bootstrap.bundle.min.js"></script>
-
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+   
+    <body>
         <footer>
             <p>Copyright @2025 Nexus Core </p>
         </footer>

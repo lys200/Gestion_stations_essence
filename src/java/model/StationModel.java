@@ -23,7 +23,7 @@ public class StationModel {
         this.adresseGeog = adresseGeog;
         this.capaciteStockGasoline = capaciteStockGasoline;
         this.capaciteStockDiesel = capaciteStockDiesel;
-        this.quantiteGasoline = quantiteGAsoline;
+        this.quantiteGasoline = quantiteGasoline;
         this.quantiteDiesel = quantiteDiesel;
     }
 
@@ -59,11 +59,11 @@ public class StationModel {
         this.capaciteStockDiesel = capaciteStockDiesel;
     }
 
-    public int getQuantiteGAsoline() {
+    public int getQuantiteGasoline() {
         return quantiteGasoline;
     }
 
-    public void setQuantiteGAsoline(int quantiteGAsoline) {
+    public void setQuantiteGasoline(int quantiteGAsoline) {
         this.quantiteGasoline = quantiteGAsoline;
     }
 

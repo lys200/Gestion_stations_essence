@@ -9,8 +9,8 @@
             <input type="text" name="adresse" placeholder="entrer l'adresse dans ce format(numero, rue, commune)" required="">
         </div>
         <div>
-            <label for="capaciteGazoline">Capacite de stockage de gasoline</label>
-            <input type="number" name="capaciteGazoline" id="capaciteGazoline" required="">
+            <label for="capaciteGasoline">Capacite de stockage de gasoline</label>
+            <input type="number" name="capaciteGasoline" id="capaciteGasoline" required="">
         </div>
         <div>
             <label for="capacitediesel">Capacite de stockage de diesel</label>
@@ -26,7 +26,7 @@
         </div>
         
         <div>
-            <input type="submit" value="Ajouter station">
+            <input type="submit" value="Ajouter_station">
         </div>
         
     </form>
