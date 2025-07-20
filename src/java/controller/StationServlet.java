@@ -73,6 +73,8 @@ public class StationServlet extends HttpServlet {
                 case "Modifier":
                     modifierStation(request, response);
                     break;
+                case "Pourcentage_Gaz":
+                    afficherPourcentageEssenceDispos(request, response);
                 default:
                     load(request, response);
             }
@@ -96,11 +98,14 @@ public class StationServlet extends HttpServlet {
         String action = request.getParameter("action");
         if (action != null) {
             switch (action) {
-                case "Ajouterstation":
+                case "Ajouter_station":
                     enregistrerStation(request, response);
                     break;
                 case "Modifier":
                     modifierStation(request, response);
+                    break;
+                case "Pourcentage_Gaz":
+                    afficherPourcentageEssenceDispos(request, response);
                     break;
                 default:
                     load(request, response);
@@ -131,9 +136,20 @@ public class StationServlet extends HttpServlet {
 //        creer une instance de StationModel
         stmodel = new StationModel();
 //        recuperation des valeurs du formulaire avec getParameter
-        stmodel.setAdresseGeog(request.getParameter("adresse"));
-        double capacite = request.getParameter("capaciteGazoline") != null
-                ? Double.parseDouble(request.getParameter("capaciteGazoline")) : 0.0;
+        int numero = request.getParameter("numero") != null
+                ? Integer.parseInt(request.getParameter("numero")) : 0;
+
+        String rue = request.getParameter("rue");
+
+        String commune = request.getParameter("adresse");
+
+        if (rue != null && commune != null) {
+            String adresseComplete = numero + ", " + rue + ", " + commune;
+            stmodel.setAdresseGeog(adresseComplete);
+        }
+
+        double capacite = request.getParameter("capaciteGasoline") != null
+                ? Double.parseDouble(request.getParameter("capaciteGasoline")) : 0.0;
         stmodel.setCapaciteStockGasoline(capacite);
         double capDies = request.getParameter("capacitediesel") != null
                 ? Double.parseDouble(request.getParameter("capacitediesel")) : 0.0;
@@ -149,8 +165,9 @@ public class StationServlet extends HttpServlet {
         stdao = new StationDAO();
         try {
             if (stdao.enregistrer(stmodel) > 0) {
+                request.setAttribute("successMessage", "Enregistré avec succès !");
                 load(request, response);
-                request.getRequestDispatcher("/station/index.jsp").forward(request, response);
+
             }
         } catch (ClassNotFoundException | SQLException ex) {
             Logger.getLogger(StationServlet.class.getName()).log(Level.SEVERE, null, ex);
@@ -163,40 +180,119 @@ public class StationServlet extends HttpServlet {
 
         try {
             String id = request.getParameter("id");
-            //        creer une instance de StationModel
             StationDAO stdao = new StationDAO();
+
+            if (id == null || id.isEmpty()) {
+                request.setAttribute("Erreur", "Identifiant station introuvable.");
+                load(request, response);
+                return;
+            }
+
             StationModel stmodel = stdao.rechercher(id);
 
-//        recuperation des valeurs du foemulaire avec getParameter
-            String capacite = (request.getParameter("capaciteGasoline"));
-            if (capacite != null) {
-                double cap = Double.parseDouble(capacite);
-                stmodel.setCapaciteStockGasoline(cap);
+            if (stmodel == null) {
+                request.setAttribute("Erreur", "Station introuvable.");
+                load(request, response);
+                return;
             }
-//                ? Double.parseDouble(request.getParameter("capaciteGazoline")) : 0.0;
 
-            double capDies = request.getParameter("capacitediesel") != null
-                    ? Double.parseDouble(request.getParameter("capacitediesel")) : 0.0;
-            stmodel.setCapaciteStockDiesel(capDies);
-            stmodel.setIdStation(id);
-//        creer une instance de StationDAO
+            // On récupère les paramètres du formulaire
+            String capaciteGasoline = request.getParameter("capaciteGasoline");
+            String capaciteDiesel = request.getParameter("capaciteDiesel");
 
-            try {
+            // Si on n'a pas de paramètres de modification, on affiche le formulaire
+            if ((capaciteGasoline == null || capaciteGasoline.isEmpty())
+                    && (capaciteDiesel == null || capaciteDiesel.isEmpty())) {
 
-                if (stdao.modifier(stmodel) > 0) {
-//                    load(request, response);
-                    request.setAttribute("stations", stmodel);
-                    request.getRequestDispatcher("/station/modifier.jsp").forward(request, response);
+                request.setAttribute("station", stmodel);
+                request.getRequestDispatcher("station/modifier.jsp").forward(request, response);
+                return;
+            }
+
+            // Validation et modification capaciteGasoline
+            if (capaciteGasoline != null && !capaciteGasoline.isEmpty()) {
+                double capGas = Double.parseDouble(capaciteGasoline);
+                if (capGas <= 0) {
+                    request.setAttribute("Erreur", "La capacité de stockage gasoline doit être supérieure à zéro.");
+                    request.setAttribute("station", stmodel);
+                    request.getRequestDispatcher("station/modifier.jsp").forward(request, response);
+                    return;
                 }
-            } catch (ClassNotFoundException | SQLException ex) {
-                Logger.getLogger(StationServlet.class.getName()).log(Level.SEVERE, null, ex);
+                if (stmodel.getQuantiteGasoline() > capGas) {
+                    request.setAttribute("Erreur", "La nouvelle capacité gasoline est inférieure à la quantité existante (" + stmodel.getQuantiteGasoline() + ").");
+                    request.setAttribute("station", stmodel);
+                    request.getRequestDispatcher("station/modifier.jsp").forward(request, response);
+                    return;
+                }
+                stmodel.setCapaciteStockGasoline(capGas);
             }
+
+            // Validation et modification capaciteDiesel
+            if (capaciteDiesel != null && !capaciteDiesel.isEmpty()) {
+                double capDies = Double.parseDouble(capaciteDiesel);
+                if (capDies <= 0) {
+                    request.setAttribute("Erreur", "La capacité de stockage du diesel doit être supérieure à zéro.");
+                    request.setAttribute("station", stmodel);
+                    request.getRequestDispatcher("station/modifier.jsp").forward(request, response);
+                    return;
+                }
+                if (stmodel.getQuantiteDiesel() > capDies) {
+                    request.setAttribute("Erreur", "La nouvelle capacité diesel est inférieure à la quantité existante (" + stmodel.getQuantiteDiesel() + ").");
+                    request.setAttribute("station", stmodel);
+                    request.getRequestDispatcher("station/modifier.jsp").forward(request, response);
+                    return;
+                }
+                stmodel.setCapaciteStockDiesel(capDies);
+            }
+
+            // Mise à jour en base
+            if (stdao.modifier(stmodel) > 0) {
+                request.setAttribute("msg", "Modification effectuée avec succès.");
+                request.setAttribute("station", stmodel);
+                request.getRequestDispatcher("station/modifier.jsp").forward(request, response);
+            } else {
+                request.setAttribute("Erreur", "Échec de la modification.");
+                request.setAttribute("station", stmodel);
+                request.getRequestDispatcher("station/modifier.jsp").forward(request, response);
+            }
+
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(StationServlet.class.getName()).log(Level.SEVERE, null, ex);
+            request.setAttribute("Erreur", "Erreur technique : " + ex.getMessage());
+            request.getRequestDispatcher("station/modifier.jsp").forward(request, response);
+        }
+    }
+
+//    methode pour gerer le pourcentage de essences dispos
+    public void afficherPourcentageEssenceDispos(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            //        creer des instances de StationModel et StationDAO
+            StationModel stmodel = null;
+            StationDAO dao = new StationDAO();
+//            recuperation de l'id du formulaire
+            String id = request.getParameter("id");
+            String type = request.getParameter("type");
+            stmodel = dao.rechercher(id);
+//            verifier que l'objet stmodel n'est pas null
+            if (stmodel != null) {
+                request.setAttribute("station", stmodel);
+                request.setAttribute("type", type);
+                request.getRequestDispatcher("station/pourcentageGazDispos.jsp").forward(request, response);
+            } else {
+                request.setAttribute("msg", "Station non trouvée");
+            }
+
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(StationServlet.class.getName()).log(Level.SEVERE, null, ex);
         } catch (SQLException ex) {
             Logger.getLogger(StationServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
+
     }
+    
+    
+    //methode pour la connexion 
 
     /**
      * Returns a short description of the servlet.

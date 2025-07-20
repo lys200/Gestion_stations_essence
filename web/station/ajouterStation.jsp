@@ -5,8 +5,23 @@
     <hr>
     <form action="${pageContext.request.contextPath}/StationServlet" method="post" > 
         <div>
-             <label for="adresse">Adresse geographique: </label>
-            <input type="text" name="adresse" placeholder="entrer l'adresse dans ce format(numero, rue, commune)" required="">
+             <label for="numero">Numero: </label>
+            <input type="number" name="numero" placeholder="entrer le numero" required="">
+        </div>
+        <div>
+             <label for="rue">Adresse geographique: </label>
+            <input type="text" name="rue" placeholder="entrer la rue" required="">
+        </div>
+        <div>
+            
+             <label for="adresse"> choix de la Commune: </label>
+             <select name="adresse" id="adresse">
+                 <option value="cap-haitien">Cap-Haitien</option>
+                 <option value="limonade">Limonade</option>
+                 <option value="terrier-rouge">Terrier-Rouge</option>
+                 <option value="fort-liberte">Fort-Liberte</option>
+             </select>
+            
         </div>
         <div>
             <label for="capaciteGasoline">Capacite de stockage de gasoline</label>
@@ -26,7 +41,7 @@
         </div>
         
         <div>
-            <input type="submit" value="Ajouter_station">
+            <input type="submit" name="action" value="Ajouter_station">
         </div>
         
     </form>

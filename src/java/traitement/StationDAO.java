@@ -28,19 +28,19 @@ public class StationDAO implements IDAOStation<StationModel> {
 //        recuperer la connection a la base de donne
         con = DBConnection.getConnection();
 //            requete d'insertion
-        String requete = "INSERT INTO tabstation values(?,?,?,?,?,?)";
+        String requete = "INSERT INTO tabstation(AdresseGeog, capaciteStockGasoline, capaciteStockDiesel, quantiteGasoline, quantiteDiesel) values(?,?,?,?,?)";
 //        utilisation de prepareStatement
         ps = con.prepareStatement(requete);
 //        passage des parametres
-        ps.setInt(1, 0);
-        ps.setString(2, e.getAdresseGeog());
-        ps.setDouble(3, e.getCapaciteStockGasoline());
-        ps.setDouble(4, e.getCapaciteStockDiesel());
-        ps.setInt(5, e.getQuantiteGasoline());
-        ps.setInt(6, e.getQuantiteDiesel());
+        ps.setString(1, e.getAdresseGeog());
+        ps.setDouble(2, e.getCapaciteStockGasoline());
+        ps.setDouble(3, e.getCapaciteStockDiesel());
+        ps.setInt(4, e.getQuantiteGasoline());
+        ps.setInt(5, e.getQuantiteDiesel());
 
 //        executer les requetes
         int n = ps.executeUpdate();
+         System.out.println("Nombre de lignes insérées : " + n);
 //        fermer les connections
         DBConnection.fermetureCon(rs, ps, con);
 
@@ -107,6 +107,10 @@ public class StationDAO implements IDAOStation<StationModel> {
     public int ListequantiteGAzDispoParPourcentage(StationModel e) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
+    
+    
+    
+    
 
     @Override
     public StationModel rechercher(String id) throws ClassNotFoundException, SQLException {

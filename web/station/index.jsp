@@ -35,12 +35,13 @@
                 <td><%= stm.getQuantiteGasoline()%></td>
                 <td><%= stm.getQuantiteDiesel()%></td>
                 <td>
-                    <a href="${pageContext.request.contextPath}/StationServlet?id=<%=stm.getIdStation() %>&action=Modifier">MODIFIER</a>
+                    <a href="${pageContext.request.contextPath}/StationServlet?id=<%=stm.getIdStation()%>&action=Modifier">MODIFIER</a> ||
+                    <a href="${pageContext.request.contextPath}/StationServlet?id=<%=stm.getIdStation()%>&action=Pourcentage_Gaz">Pourcentage_Gaz</a>
                 </td>
             </tr>
 
             <%}
-            } else{%>
+            } else {%>
             <tr>
                 <td colspan="6">Aucune station enregistrée.</td>
             </tr>

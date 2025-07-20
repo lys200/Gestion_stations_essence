@@ -22,7 +22,8 @@ public class DBConnection {
 //        chargement du pilote
         Class.forName("com.mysql.cj.jdbc.Driver");
 //        chargement des parametres
-        String url = "jdbc:mysql://localhost:3306/gestionStationEssence";
+        String url = "jdbc:mysql://localhost:3306/gestionStationEssence?useSSL=false";
+                   
         String user = "root";
         String passwd = "";
 //etablit la connection
