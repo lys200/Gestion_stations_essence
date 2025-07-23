@@ -16,15 +16,17 @@ public class ApprovisionnementModel {
     private int quantite;
     private Date dateApprov;
     private String fournisseur;
+    private String idStation;
     
     public ApprovisionnementModel(){}
 
-    public ApprovisionnementModel(String idApp, String TypeCarburant, int quantite, Date dateApprov, String fournisseur) {
+    public ApprovisionnementModel(String idApp, String TypeCarburant, int quantite, Date dateApprov, String fournisseur, String idStation) {
         this.idApp = idApp;
         this.TypeCarburant = TypeCarburant;
         this.quantite = quantite;
         this.dateApprov = dateApprov;
         this.fournisseur = fournisseur;
+        this.idStation = idStation;
     }
 
     public String getIdApp() {
@@ -67,8 +69,12 @@ public class ApprovisionnementModel {
         this.fournisseur = fournisseur;
     }
 
-    
-    
-  
+    public String getIdStation() {
+        return idStation;
+    }
+
+    public void setIdStation(String idStation) {
+        this.idStation = idStation;
+    }
     
 }

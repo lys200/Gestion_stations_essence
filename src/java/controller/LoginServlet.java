@@ -6,18 +6,26 @@ package controller;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import model.Utilisateurs;
+import traitement.LoginDao;
 
 /**
  *
  * @author BELCEUS
  */
 @WebServlet(name = "ConnectionServlet", urlPatterns = {"/ConnectionServlet"})
-public class ConnectionServlet extends HttpServlet {
+public class LoginServlet extends HttpServlet {
+
+    LoginDao ldao = null;
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -36,7 +44,7 @@ public class ConnectionServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet ConnectionServlet</title>");            
+            out.println("<title>Servlet ConnectionServlet</title>");
             out.println("</head>");
             out.println("<body>");
             out.println("<h1>Servlet ConnectionServlet at " + request.getContextPath() + "</h1>");
@@ -71,7 +79,42 @@ public class ConnectionServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        try {
+            //        processRequest(request, response);
+            connection(request, response);
+        } catch (SQLException ex) {
+            Logger.getLogger(LoginServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(LoginServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
+    public void connection(HttpServletRequest request, HttpServletResponse response) 
+            throws SQLException, ClassNotFoundException, ServletException, IOException {
+//        recuperation des parametres du formulaire
+        String nomUtil = request.getParameter("nomutilisateur");
+        String modpas = request.getParameter("password");
+//        instancier LoginDao
+        ldao = new LoginDao();
+        if (nomUtil != null && modpas != null) {
+            
+            Utilisateurs ut = ldao.rechercher(nomUtil, modpas);
+            
+            if(ldao.rechercher(nomUtil, modpas)!= null) {
+                HttpSession session = request.getSession();
+                session.setAttribute("user ", ut);
+                 request.getRequestDispatcher("/index.jsp").forward(request, response);
+            }else{
+                
+            request.setAttribute("Erreur", "Vous devez remplir tous les champs");
+            request.getRequestDispatcher("../connection.jsp");
+            }
+
+        } else {
+            System.out.println("page connection ");
+        }
+
     }
 
     /**

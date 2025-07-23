@@ -40,7 +40,7 @@ public class StationDAO implements IDAOStation<StationModel> {
 
 //        executer les requetes
         int n = ps.executeUpdate();
-         System.out.println("Nombre de lignes insérées : " + n);
+      
 //        fermer les connections
         DBConnection.fermetureCon(rs, ps, con);
 

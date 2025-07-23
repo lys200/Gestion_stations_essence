@@ -136,8 +136,15 @@ public class StationServlet extends HttpServlet {
 //        creer une instance de StationModel
         stmodel = new StationModel();
 //        recuperation des valeurs du formulaire avec getParameter
-        int numero = request.getParameter("numero") != null
-                ? Integer.parseInt(request.getParameter("numero")) : 0;
+
+        String numero = request.getParameter("numero");
+        int num = 0;
+        if (numero != null && numero.matches("\\d+")) {
+            num = Integer.parseInt(numero);
+        } else {
+            request.setAttribute("Erreur", "le numero doit etre des chiffres");
+            request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
+        }
 
         String rue = request.getParameter("rue");
 
@@ -148,19 +155,106 @@ public class StationServlet extends HttpServlet {
             stmodel.setAdresseGeog(adresseComplete);
         }
 
-        double capacite = request.getParameter("capaciteGasoline") != null
-                ? Double.parseDouble(request.getParameter("capaciteGasoline")) : 0.0;
-        stmodel.setCapaciteStockGasoline(capacite);
-        double capDies = request.getParameter("capacitediesel") != null
-                ? Double.parseDouble(request.getParameter("capacitediesel")) : 0.0;
+//        double capacite = request.getParameter("capaciteGasoline") != null
+//                ? Double.parseDouble(request.getParameter("capaciteGasoline")) : 0.0;
+//        
+        String capaciteGasoline = request.getParameter("capaciteGasoline");
+
+        if (capaciteGasoline == null || capaciteGasoline.trim().isEmpty()) {
+            request.setAttribute("Erreur", "La capacité de gasoline est requise.");
+            request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
+            return;
+        }
+//verifier que des caracteres ne soient pas saisis
+        if (!capaciteGasoline.matches("^-?\\d+(\\.\\d+)?$")) {
+            request.setAttribute("Erreur", "La capacité doit être un nombre valide.");
+            request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
+            return;
+        }
+        double capGaz = Double.parseDouble(capaciteGasoline);
+        if (capGaz <= 0) {
+            request.setAttribute("Erreur", "La capacité doit être supérieure à zéro.");
+            request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
+            return;
+        }
+        stmodel.setCapaciteStockGasoline(capGaz);
+
+        String capaciteDiesel = request.getParameter("capacitediesel");
+        if (capaciteDiesel == null || capaciteDiesel.trim().isEmpty()) {
+            request.setAttribute("Erreur", "La capacité de diesel est requise.");
+            request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
+            return;
+        }
+
+//verifier que des caracteres ne soient pas saisis
+        if (!capaciteDiesel.matches("^-?\\d+(\\.\\d+)?$")) {
+            request.setAttribute("Erreur", "La capacité doit être un nombre valide.");
+            request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
+            return;
+        }
+
+        double capDies = Double.parseDouble(capaciteGasoline);
+        if (capDies <= 0) {
+            request.setAttribute("Erreur", "La capacité doit être supérieure à zéro.");
+            request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
+            return;
+        }
         stmodel.setCapaciteStockDiesel(capDies);
 
-        int qteGaz = request.getParameter("qtegazo") != null
-                ? Integer.parseInt(request.getParameter("qtegazo")) : 0;
-        stmodel.setQuantiteGasoline(qteGaz);
-        int qted = request.getParameter("qteDiesel") != null
-                ? Integer.parseInt(request.getParameter("qteDiesel")) : 0;
-        stmodel.setQuantiteDiesel(qted);
+//        verifier que la quantite ne soit pas superieure a la capacite
+        String qteGaz = request.getParameter("qtegazo");
+
+        if (qteGaz == null || qteGaz.isEmpty()) {
+            request.setAttribute("Erreur", "La quantite doit etre saisie");
+            request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
+            return;
+        }
+
+        if (!qteGaz.matches("^-?\\d+(\\.\\d+)?$")) {
+            request.setAttribute("Erreur", "La quantite doit être un nombre valide.");
+            request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
+            return;
+        }
+//         conversion de la quantite en entier
+        int qtGaz = Integer.parseInt(qteGaz);
+        if (qtGaz <= 0) {
+            request.setAttribute("Erreur", "La quantite de gasoline doit être supérieure à zéro.");
+            request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
+            return;
+        }
+        if (qtGaz > capGaz) {
+            request.setAttribute("Erreur", "La quantite de gasoline  doit être supérieure à la capacite de stockage de gasoline.");
+            request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
+            return;
+        }
+        stmodel.setQuantiteGasoline(qtGaz);
+        
+//        verifier que la quantite de diesel ne soit pas superiere a sa capacite
+        String qtediesel = request.getParameter("qteDiesel");
+        if (qtediesel == null || qteGaz.isEmpty()) {
+            request.setAttribute("Erreur", "La quantite doit etre saisie");
+            request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
+            return;
+        }
+        if (!qtediesel.matches("^-?\\d+(\\.\\d+)?$")) {
+            request.setAttribute("Erreur", "La quantite doit être un nombre valide.");
+            request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
+            return;
+        }
+//         conversion de la quantite en entier
+        int qtdiesel = Integer.parseInt(qtediesel);
+        if (qtdiesel <= 0) {
+            request.setAttribute("Erreur", "La quantite de diesel doit être supérieure à zéro.");
+            request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
+            return;
+        }
+        if (qtdiesel > capDies) {
+            request.setAttribute("Erreur", "La quantite de diesel  doit être supérieure à la capacite de stockage de diesel.");
+            request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
+            return;
+        }
+        stmodel.setQuantiteDiesel(qtdiesel);
+
 //        creer une instance de StationDAO
         stdao = new StationDAO();
         try {
@@ -290,10 +384,8 @@ public class StationServlet extends HttpServlet {
         }
 
     }
-    
-    
-    //methode pour la connexion 
 
+    //methode pour la connexion 
     /**
      * Returns a short description of the servlet.
      *
