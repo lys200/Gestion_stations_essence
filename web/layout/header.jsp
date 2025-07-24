@@ -12,7 +12,7 @@
                 <ul>
                     <li><a href="">Accueil</a></li>
                     <li><a href="${pageContext.request.contextPath}/StationServlet">Station</a></li>
-                    <li><a href="">Approvisionnement</a></li>
+                    <li><a href="${pageContext.request.contextPath}/ApprovServlet">Approvisionnement</a></li>
                     <li><a href="">Ventes</a></li>
                     <li><a href="">Deconnexion</a></li>
                 </ul>
