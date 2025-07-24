@@ -20,7 +20,11 @@ public class ApprovisionnementModel {
     
     public ApprovisionnementModel(){}
 
-    public ApprovisionnementModel(int quantite, String idApp, String TypeCarburant, String fournisseur, double aDouble) {
+
+  
+
+    public ApprovisionnementModel(String idApp, String TypeCarburant, int quantite, Date dateApprov, String fournisseur, String idStation) {
+
         this.idApp = idApp;
         this.TypeCarburant = TypeCarburant;
         this.quantite = quantite;
@@ -77,11 +81,5 @@ public class ApprovisionnementModel {
         this.idStation = idStation;
     }
 
-    
-
-  
-    
-    
-  
     
 }
