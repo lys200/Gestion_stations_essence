@@ -1,153 +1,210 @@
 package controller;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.ApprovisionnementModel;
+import model.StationModel;
 import traitement.ApprovDAO;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @WebServlet(name = "ApprovServlet", urlPatterns = {"/ApprovServlet"})
 public class ApprovServlet extends HttpServlet {
 
-    private ApprovDAO approvdao;
+    private ApprovDAO approvdao = new ApprovDAO();
 
-    private final List<String> fournisseursAutorises = Arrays.asList("TOTAL", "PETROHAITI", "ESSO");
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+           throws ServletException, IOException {
+       response.setContentType("text/html;charset=UTF-8");
+       try (PrintWriter out = response.getWriter()) {
+           /* TODO output your page here. You may use following sample code. */
+           out.println("<!DOCTYPE html>");
+           out.println("<html>");
+           out.println("<head>");
+           out.println("<title>Servlet ApprovServlet</title>");
+           out.println("</head>");
+           out.println("<body>");
+           out.println("<h1>Servlet ApprovServlet at " + request.getContextPath() + "</h1>");
+           out.println("</body>");
+           out.println("</html>");
+       }
+   } 
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            approvdao = new ApprovDAO();
-            List<?> stations = approvdao.listerStations();
-            request.setAttribute("stations", stations);
-            request.getRequestDispatcher("/Approvisionnement/AjoutApprov.jsp").forward(request, response);
-        } catch (ClassNotFoundException | SQLException ex) {
-            Logger.getLogger(ApprovServlet.class.getName()).log(Level.SEVERE, null, ex);
-            request.setAttribute("Erreur", "Erreur lors du chargement des stations.");
-            request.getRequestDispatcher("/Approvisionnement/AjoutApprov.jsp").forward(request, response);
-        }
-    }
+   @Override
+   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String action = request.getParameter("action");
-        if ("ajouterApprov".equals(action)) {
-            try {
-                enregistrerApprov(request, response);
-            } catch (Exception ex) {
-                Logger.getLogger(ApprovServlet.class.getName()).log(Level.SEVERE, null, ex);
-                request.setAttribute("Erreur", "Erreur lors de l'enregistrement : " + ex.getMessage());
-                doGet(request, response);
-            }
-        } else {
-            doGet(request, response);
-        }
-    }
+       String action = request.getParameter("action");
+       if (action == null) action = "accueil";
 
-    private void enregistrerApprov(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException, ClassNotFoundException, SQLException, ParseException {
+       try {
+           switch (action) {
+               case "afficherFormAjout":
+                   afficherFormAjout(request, response);
+                   break;
+               case "afficherListe":
+                   afficherListe(request, response);
+                   break;
+               default:
+                   response.sendRedirect("Approvisionnement/index.jsp");
+                   break;
+           }
+       } catch (Exception ex) {
+           request.setAttribute("Erreur", "Erreur inattendue : " + ex.getMessage());
+           request.getRequestDispatcher("Approvisionnement/index.jsp").forward(request, response);
+       }
+   }
 
-        approvdao = new ApprovDAO();
+   private void afficherFormAjout(HttpServletRequest request, HttpServletResponse response) throws SQLException, ClassNotFoundException, ServletException, IOException {
+       List<StationModel> stations = approvdao.listerStations();
+       request.setAttribute("stations", stations);
+       request.getRequestDispatcher("/Approvisionnement/AjoutApprov.jsp").forward(request, response);
+   }
 
-        String idStation = request.getParameter("idStation");
-        String typeCarburant = request.getParameter("typeCarburant");
-        String fournisseur = request.getParameter("fournisseur");
-        String quantiteStr = request.getParameter("quantite");
-        String dateApprovStr = request.getParameter("dateApprov");
+   private void afficherListe(HttpServletRequest request, HttpServletResponse response) throws SQLException, ClassNotFoundException, ServletException, IOException {
+       Map<String, Object> filtres = new HashMap<>();
 
-        // Validation des paramètres
-        if (idStation == null || idStation.isEmpty()
-                || typeCarburant == null || typeCarburant.isEmpty()
-                || fournisseur == null || fournisseur.isEmpty()
-                || quantiteStr == null || quantiteStr.isEmpty()
-                || dateApprovStr == null || dateApprovStr.isEmpty()) {
-            request.setAttribute("Erreur", "Tous les champs sont obligatoires.");
-            doGet(request, response);
-            return;
-        }
+       String filterStation = request.getParameter("filterStation");
+       String filterFournisseur = request.getParameter("filterFournisseur");
+       String filterDate = request.getParameter("filterDate");
 
-        if (!fournisseursAutorises.contains(fournisseur)) {
-            request.setAttribute("Erreur", "Fournisseur invalide.");
-            doGet(request, response);
-            return;
-        }
+       if (filterStation != null && !filterStation.trim().isEmpty()) filtres.put("idStation", filterStation);
+       if (filterFournisseur != null && !filterFournisseur.trim().isEmpty()) filtres.put("fournisseur", filterFournisseur);
+       if (filterDate != null && !filterDate.trim().isEmpty()) filtres.put("dateApprov", filterDate);
 
-        if (!approvdao.stationExiste(idStation)) {
-            request.setAttribute("Erreur", "Station inexistante.");
-            doGet(request, response);
-            return;
-        }
+       List<ApprovisionnementModel> listeApprovs = approvdao.listerApprovisionnementsFiltres(filtres);
+       List<StationModel> stations = approvdao.listerStations();
 
-        int quantite;
-        try {
-            quantite = Integer.parseInt(quantiteStr);
-            if (quantite <= 0) {
-                request.setAttribute("Erreur", "La quantité doit être un entier positif.");
-                doGet(request, response);
-                return;
-            }
-        } catch (NumberFormatException e) {
-            request.setAttribute("Erreur", "Quantité invalide.");
-            doGet(request, response);
-            return;
-        }
+       request.setAttribute("listeApprovs", listeApprovs);
+       request.setAttribute("stations", stations);
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        Date dateApprov;
-        try {
-            dateApprov = sdf.parse(dateApprovStr);
-        } catch (ParseException e) {
-            request.setAttribute("Erreur", "Date invalide.");
-            doGet(request, response);
-            return;
-        }
+       // Pour pré-remplir les filtres dans la JSP
+       request.setAttribute("filterStation", filterStation);
+       request.setAttribute("filterFournisseur", filterFournisseur);
+       request.setAttribute("filterDate", filterDate);
 
-        String idApp = genererIdApprovisionnement();
+       request.getRequestDispatcher("/Approvisionnement/AffichApprovs.jsp").forward(request, response);
+   }
 
-        ApprovisionnementModel appModel = new ApprovisionnementModel();
-        appModel.setIdApp(idApp);
-        appModel.setIdStation(idStation);
-        appModel.setTypeCarburant(typeCarburant);
-        appModel.setFournisseur(fournisseur);
-        appModel.setQuantite(quantite);
-        appModel.setDateApprov(dateApprov);
+   @Override
+   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        int result = approvdao.enregistrer(appModel);
+       String action = request.getParameter("action");
+       if ("ajouterApprov".equals(action)) {
+           try {
+               ajouterApprovisionnement(request, response);
+           } catch (Exception ex) {
+               request.setAttribute("Erreur", "Erreur lors de l'ajout : " + ex.getMessage());
+               try {
+                   afficherFormAjout(request, response);
+               } catch (Exception e) {
+                   throw new ServletException(e);
+               }
+           }
+       } else {
+           doGet(request, response);
+       }
+   }
 
-        if (result > 0) {
-            // Mise à jour automatique du stock
-            int majStock = approvdao.mettreAJourStock(idStation, typeCarburant, quantite);
+   private void ajouterApprovisionnement(HttpServletRequest request, HttpServletResponse response) throws Exception {
+       String idStation = request.getParameter("idStation");
+       String typeCarburant = request.getParameter("typeCarburant");
+       String fournisseur = request.getParameter("fournisseur");
+       String quantiteStr = request.getParameter("quantite");
 
-            if (majStock > 0) {
-                request.setAttribute("successMessage", "Approvisionnement et mise à jour du stock réussis ! ID : " + idApp);
-            } else {
-                request.setAttribute("Erreur", "Approvisionnement enregistré mais échec de la mise à jour du stock.");
-            }
-            doGet(request, response);
-        } else {
-            request.setAttribute("Erreur", "Échec de l'enregistrement.");
-            doGet(request, response);
-        }
-    }
+       // Validation simple (champs obligatoires)
+       if (idStation == null || idStation.isEmpty() ||
+           typeCarburant == null || typeCarburant.isEmpty() ||
+           fournisseur == null || fournisseur.isEmpty() ||
+           quantiteStr == null || quantiteStr.isEmpty()) {
 
-    private String genererIdApprovisionnement() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-        String dateStr = sdf.format(new Date());
-        int randomNum = new Random().nextInt(900) + 100; // 100 à 999
-        return "APP" + dateStr + randomNum;
-    }
+           request.setAttribute("Erreur", "Tous les champs sont obligatoires.");
+           afficherFormAjout(request, response);
+           return;
+       }
+
+       int quantite;
+       try {
+           quantite = Integer.parseInt(quantiteStr);
+           if (quantite <= 0) throw new NumberFormatException();
+       } catch (NumberFormatException e) {
+           request.setAttribute("Erreur", "Quantité invalide.");
+           afficherFormAjout(request, response);
+           return;
+       }
+
+       if (!approvdao.stationExiste(idStation)) {
+           request.setAttribute("Erreur", "Station inexistante.");
+           afficherFormAjout(request, response);
+           return;
+       }
+
+       // **Vérification de la capacité restante**
+       StationModel station = null;
+       List<StationModel> stations = approvdao.listerStations();
+       for (StationModel s : stations) {
+           if (s.getIdStation().equals(idStation)) {
+               station = s;
+               break;
+           }
+       }
+
+       if (station == null) {
+           request.setAttribute("Erreur", "Station non trouvée.");
+           afficherFormAjout(request, response);
+           return;
+       }
+
+       int quantiteDisponibleRestante;
+       if ("gazoline".equalsIgnoreCase(typeCarburant)) {
+           quantiteDisponibleRestante = (int)(station.getCapaciteStockGasoline() - station.getQuantiteGasoline());
+       } else if ("diesel".equalsIgnoreCase(typeCarburant)) {
+           quantiteDisponibleRestante = (int)(station.getCapaciteStockDiesel() - station.getQuantiteDiesel());
+       } else {
+           request.setAttribute("Erreur", "Type de carburant inconnu.");
+           afficherFormAjout(request, response);
+           return;
+       }
+
+       if (quantite > quantiteDisponibleRestante) {
+           request.setAttribute("Erreur", "Quantité trop élevée. Capacité restante disponible : " + quantiteDisponibleRestante);
+           afficherFormAjout(request, response);
+           return;
+       }
+
+       // Date actuelle automatique (timestamp)
+       Date dateActuelle = new Date();
+
+       // Générer ID approvisionnement unique
+       String idApp = genererIdApprovisionnement();
+
+       ApprovisionnementModel approv = new ApprovisionnementModel();
+       approv.setIdApp(idApp);
+       approv.setIdStation(idStation);
+       approv.setTypeCarburant(typeCarburant);
+       approv.setFournisseur(fournisseur);
+       approv.setQuantite(quantite);
+       approv.setDateApprov(dateActuelle);
+
+       int res = approvdao.enregistrerAvecMajStock(approv);
+
+       if (res > 0) {
+           String msg = "Approvisionnement enregistré avec succès le " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(dateActuelle);
+           request.setAttribute("successMessage", msg);
+           afficherFormAjout(request, response);
+       } else {
+           request.setAttribute("Erreur", "Erreur lors de l'enregistrement.");
+           afficherFormAjout(request, response);
+       }
+   }
+
+   private String genererIdApprovisionnement() {
+       return "APP" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) + (new Random().nextInt(900) + 100);
+   }
 }

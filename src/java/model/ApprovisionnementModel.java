@@ -6,10 +6,8 @@ package model;
 
 import java.util.Date;
 
-/**
- *
- * @author BELCEUS
- */
+
+
 public class ApprovisionnementModel {
     private String idApp;
     private String TypeCarburant;

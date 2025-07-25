@@ -1,176 +1,151 @@
 package traitement;
 
 import dbUtils.DBConnection;
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 import model.ApprovisionnementModel;
 import model.StationModel;
 
+import java.sql.*;
+import java.util.*;
+
 public class ApprovDAO {
 
-    Connection con;
-    PreparedStatement ps;
-    ResultSet rs;
+    
+    
+    
+    
+    
+    public int enregistrerAvecMajStock(ApprovisionnementModel approv) throws ClassNotFoundException, SQLException {
+        Connection con = null;
+        PreparedStatement psInsert = null;
+        PreparedStatement psUpdateStock = null;
+        try {
+            con = DBConnection.getConnection();
+            con.setAutoCommit(false);
 
-    // Enregistrer un approvisionnement
-    public int enregistrer(ApprovisionnementModel approv) throws ClassNotFoundException, SQLException {
-        con = DBConnection.getConnection();
-        String requete = "INSERT INTO tabapprovisionnement (idApp, idStation, TypeCarburant, quantite, dateApprov, fournisseur) VALUES (?, ?, ?, ?, ?, ?)";
-        ps = con.prepareStatement(requete);
-        ps.setString(1, approv.getIdApp());
-        ps.setString(2, approv.getIdStation());
-        ps.setString(3, approv.getTypeCarburant());
-        ps.setInt(4, approv.getQuantite());
-        ps.setDate(5, new java.sql.Date(approv.getDateApprov().getTime()));
-        ps.setString(6, approv.getFournisseur());
+            String insertSQL = "INSERT INTO tabapprovisionnement (idApp, idStation, TypeCarburant, quantite, dateApprov, fournisseur) VALUES (?, ?, ?, ?, ?, ?)";
+            psInsert = con.prepareStatement(insertSQL);
+            psInsert.setString(1, approv.getIdApp());
+            psInsert.setString(2, approv.getIdStation());
+            psInsert.setString(3, approv.getTypeCarburant());
+            psInsert.setInt(4, approv.getQuantite());
+            psInsert.setTimestamp(5, new Timestamp(approv.getDateApprov().getTime()));
+            psInsert.setString(6, approv.getFournisseur());
 
-        int n = ps.executeUpdate();
-        DBConnection.fermetureCon(rs, ps, con);
-        return n;
+            int n1 = psInsert.executeUpdate();
+
+            String updateStockSQL;
+            if ("gazoline".equalsIgnoreCase(approv.getTypeCarburant())) {
+                updateStockSQL = "UPDATE tabstation SET quantiteGasoline = quantiteGasoline + ? WHERE idStation = ?";
+            } else if ("diesel".equalsIgnoreCase(approv.getTypeCarburant())) {
+                updateStockSQL = "UPDATE tabstation SET quantiteDiesel = quantiteDiesel + ? WHERE idStation = ?";
+            } else {
+                throw new SQLException("Type carburant inconnu : " + approv.getTypeCarburant());
+            }
+
+            psUpdateStock = con.prepareStatement(updateStockSQL);
+            psUpdateStock.setInt(1, approv.getQuantite());
+            psUpdateStock.setString(2, approv.getIdStation());
+
+            int n2 = psUpdateStock.executeUpdate();
+
+            if (n1 > 0 && n2 > 0) {
+                con.commit();
+                return 1;
+            } else {
+                con.rollback();
+                return 0;
+            }
+
+        } catch (Exception e) {
+            if (con != null) con.rollback();
+            throw e;
+        } finally {
+            if (psInsert != null) psInsert.close();
+            if (psUpdateStock != null) psUpdateStock.close();
+            if (con != null) {
+                con.setAutoCommit(true);
+                con.close();
+            }
+        }
     }
 
-    // Mise à jour automatique du stock après approvisionnement
-    public int mettreAJourStock(String idStation, String typeCarburant, int quantiteAajouter) throws ClassNotFoundException, SQLException {
-        con = DBConnection.getConnection();
-
-        // Vérifier si le stock existe déjà
-        String checkSql = "SELECT COUNT(*) FROM tabstock WHERE idStation = ? AND typeCarburant = ?";
-        ps = con.prepareStatement(checkSql);
-        ps.setString(1, idStation);
-        ps.setString(2, typeCarburant);
-        rs = ps.executeQuery();
-
-        boolean existe = false;
-        if (rs.next()) {
-            existe = rs.getInt(1) > 0;
-        }
-        rs.close();
-        ps.close();
-
-        int resultat = 0;
-
-        if (existe) {
-            // Mise à jour stock existant
-            String updateSql = "UPDATE tabstock SET quantite = quantite + ? WHERE idStation = ? AND typeCarburant = ?";
-            ps = con.prepareStatement(updateSql);
-            ps.setInt(1, quantiteAajouter);
-            ps.setString(2, idStation);
-            ps.setString(3, typeCarburant);
-            resultat = ps.executeUpdate();
-            ps.close();
-        } else {
-            // Insertion nouveau stock
-            String insertSql = "INSERT INTO tabstock (idStation, typeCarburant, quantite) VALUES (?, ?, ?)";
-            ps = con.prepareStatement(insertSql);
-            ps.setString(1, idStation);
-            ps.setString(2, typeCarburant);
-            ps.setInt(3, quantiteAajouter);
-            resultat = ps.executeUpdate();
-            ps.close();
-        }
-
-        con.close();
-        return resultat;
-    }
-
-    // Lister tous les approvisionnements
-    public List<ApprovisionnementModel> lister() throws ClassNotFoundException, SQLException {
+    public List<ApprovisionnementModel> listerApprovisionnementsFiltres(Map<String, Object> filtres) throws ClassNotFoundException, SQLException {
         List<ApprovisionnementModel> liste = new ArrayList<>();
-        con = DBConnection.getConnection();
-        String requete = "SELECT * FROM tabapprovisionnement";
-        ps = con.prepareStatement(requete);
-        rs = ps.executeQuery();
+        StringBuilder sql = new StringBuilder("SELECT * FROM tabapprovisionnement WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
 
-        while (rs.next()) {
-            ApprovisionnementModel a = new ApprovisionnementModel();
-            a.setIdApp(rs.getString("idApp"));
-            a.setIdStation(rs.getString("idStation"));
-            a.setTypeCarburant(rs.getString("TypeCarburant"));
-            a.setQuantite(rs.getInt("quantite"));
-            a.setDateApprov(rs.getDate("dateApprov"));
-            a.setFournisseur(rs.getString("fournisseur"));
-
-            liste.add(a);
+        if (filtres.containsKey("idStation")) {
+            sql.append(" AND idStation = ? ");
+            params.add(filtres.get("idStation"));
+        }
+        if (filtres.containsKey("fournisseur")) {
+            sql.append(" AND fournisseur LIKE ? ");
+            params.add("%" + filtres.get("fournisseur") + "%");
+        }
+        if (filtres.containsKey("dateApprov")) {
+            sql.append(" AND DATE(dateApprov) = ? ");
+            params.add(filtres.get("dateApprov"));
         }
 
-        DBConnection.fermetureCon(rs, ps, con);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ApprovisionnementModel a = new ApprovisionnementModel();
+                    a.setIdApp(rs.getString("idApp"));
+                    a.setIdStation(rs.getString("idStation"));
+                    a.setTypeCarburant(rs.getString("TypeCarburant"));
+                    a.setQuantite(rs.getInt("quantite"));
+                    a.setDateApprov(rs.getTimestamp("dateApprov"));
+                    a.setFournisseur(rs.getString("fournisseur"));
+                    liste.add(a);
+                }
+            }
+        }
+
         return liste;
     }
 
-    // Rechercher un approvisionnement par id
-    public ApprovisionnementModel rechercher(String idApp) throws ClassNotFoundException, SQLException {
-        con = DBConnection.getConnection();
-        String requete = "SELECT * FROM tabapprovisionnement WHERE idApp = ?";
-        ps = con.prepareStatement(requete);
-        ps.setString(1, idApp);
-        rs = ps.executeQuery();
-
-        ApprovisionnementModel a = null;
-        if (rs.next()) {
-            a = new ApprovisionnementModel();
-            a.setIdApp(rs.getString("idApp"));
-            a.setIdStation(rs.getString("idStation"));
-            a.setTypeCarburant(rs.getString("TypeCarburant"));
-            a.setQuantite(rs.getInt("quantite"));
-            a.setDateApprov(rs.getDate("dateApprov"));
-            a.setFournisseur(rs.getString("fournisseur"));
-        }
-
-        DBConnection.fermetureCon(rs, ps, con);
-        return a;
-    }
-
-    // Modifier un approvisionnement (optionnel)
-    public int modifier(ApprovisionnementModel approv) throws ClassNotFoundException, SQLException {
-        con = DBConnection.getConnection();
-        String requete = "UPDATE tabapprovisionnement SET idStation=?, TypeCarburant=?, quantite=?, dateApprov=?, fournisseur=? WHERE idApp=?";
-        ps = con.prepareStatement(requete);
-        ps.setString(1, approv.getIdStation());
-        ps.setString(2, approv.getTypeCarburant());
-        ps.setInt(3, approv.getQuantite());
-        ps.setDate(4, new java.sql.Date(approv.getDateApprov().getTime()));
-        ps.setString(5, approv.getFournisseur());
-        ps.setString(6, approv.getIdApp());
-
-        int n = ps.executeUpdate();
-        DBConnection.fermetureCon(rs, ps, con);
-        return n;
-    }
-
-    // Lister toutes les stations
     public List<StationModel> listerStations() throws ClassNotFoundException, SQLException {
-        List<StationModel> liste = new ArrayList<>();
-        con = DBConnection.getConnection();
-        String requete = "SELECT idStation, adresseGeog FROM tabstation"; 
-        ps = con.prepareStatement(requete);
-        rs = ps.executeQuery();
+        List<StationModel> stations = new ArrayList<>();
+        String sql = "SELECT * FROM tabstation";
 
-        while (rs.next()) {
-            StationModel station = new StationModel();
-            station.setIdStation(rs.getString("idStation"));
-            station.setAdresseGeog(rs.getString("adresseGeog"));
-            liste.add(station);
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                StationModel s = new StationModel();
+                s.setIdStation(rs.getString("idStation"));
+                s.setAdresseGeog(rs.getString("adresseGeog"));
+                s.setCapaciteStockGasoline(rs.getDouble("capaciteStockGasoline"));
+                s.setCapaciteStockDiesel(rs.getDouble("capaciteStockDiesel"));
+                s.setQuantiteGasoline(rs.getInt("quantiteGasoline"));
+                s.setQuantiteDiesel(rs.getInt("quantiteDiesel"));
+                stations.add(s);
+            }
         }
-
-        DBConnection.fermetureCon(rs, ps, con);
-        return liste;
+        return stations;
     }
 
-    // Vérifier si une station existe
     public boolean stationExiste(String idStation) throws ClassNotFoundException, SQLException {
-        con = DBConnection.getConnection();
-        String requete = "SELECT COUNT(*) FROM tabstation WHERE idStation = ?";
-        ps = con.prepareStatement(requete);
-        ps.setString(1, idStation);
-        rs = ps.executeQuery();
-
-        boolean existe = false;
-        if (rs.next()) {
-            existe = rs.getInt(1) > 0;
+        String sql = "SELECT COUNT(*) FROM tabstation WHERE idStation = ?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, idStation);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
         }
-
-        DBConnection.fermetureCon(rs, ps, con);
-        return existe;
+        return false;
     }
+
+    
 }
