@@ -8,20 +8,31 @@
     </head>
     <body>
         <h1>Formulaire de connexion</h1>
-        <form action="action" method="post">
-        <div>
-            <label for="nomutilisateur">Nom Utilisateur</label>
-            <input type="text" name="nomutilisateur" required="" placeholder="entre le nom d'utilisateur"><br><br>
-        </div>
-        <div>
-            <label for="password">Nom Utilisateur</label>
-            <input type="password" name="password" required="" placeholder="entre le mot de passe"><br><br>
-        </div>
-        <div>
-            
-            <input type="submit" name="action" value="Authentifier">
-            
-        </div>
-            </form>
+        <form action="${pageContext.request.contextPath}/LoginServlet" method="post">
+            <div>
+                <label for="nomutilisateur">Nom Utilisateur</label>
+                <input type="text" name="nomutilisateur" required="" placeholder="entrez le nom d'utilisateur"><br><br>
+            </div>
+            <div>
+                <label for="password">Nom Utilisateur</label>
+                <input type="password" name="password" required="" placeholder="entrez le mot de passe"><br><br>
+            </div>
+            <div>
+
+                <input type="submit" name="action" value="Connection">
+                <p>Pas de compte? <a href="Inscription.jsp">Créer un compte</a></p>
+
+
+            </div>
+        </form>
+        <%
+            String erreur = (String) request.getAttribute("Erreur");
+            if (erreur != null) {
+        %>
+        <p><%= erreur%></p>
+        <%
+            }
+        %>
+
     </body>
 </html>

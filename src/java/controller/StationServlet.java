@@ -217,8 +217,8 @@ public class StationServlet extends HttpServlet {
         }
 //         conversion de la quantite en entier
         int qtGaz = Integer.parseInt(qteGaz);
-        if (qtGaz <= 0) {
-            request.setAttribute("Erreur", "La quantite de gasoline doit être supérieure à zéro.");
+        if (qtGaz < 0) {
+            request.setAttribute("Erreur", "La quantite de gasoline ne  doit être pas inferieure à zéro.");
             request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
             return;
         }
@@ -243,13 +243,13 @@ public class StationServlet extends HttpServlet {
         }
 //         conversion de la quantite en entier
         int qtdiesel = Integer.parseInt(qtediesel);
-        if (qtdiesel <= 0) {
-            request.setAttribute("Erreur", "La quantite de diesel doit être supérieure à zéro.");
+        if (qtdiesel < 0) {
+            request.setAttribute("Erreur", "La quantite de diesel ne  doit pas être  inferieure à zéro.");
             request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
             return;
         }
         if (qtdiesel > capDies) {
-            request.setAttribute("Erreur", "La quantite de diesel  doit être supérieure à la capacite de stockage de diesel.");
+            request.setAttribute("Erreur", "La quantite de diesel ne doit pas être supérieure à la capacite de stockage de diesel.");
             request.getRequestDispatcher("/station/ajouterStation.jsp").forward(request, response);
             return;
         }

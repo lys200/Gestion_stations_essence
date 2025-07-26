@@ -20,21 +20,45 @@ public class LoginDao {
 
     public Utilisateurs rechercher(String nomUtilisateur, String motDePasse)
             throws SQLException, ClassNotFoundException {
-//        recuperer la connection
+
+        Utilisateurs user = null;
+//recuperation de connexion 
         con = DBConnection.getConnection();
-//            requete
-        String requete = "SELECT * FROM tabutilisateur where nomUtilisateur=? and motDePasse=?";
-//            objet de prepareStatement
+        String requete = "SELECT * FROM tabutilisateur WHERE nomUtilisateur=? AND mot_de_passe=?";
         ps = con.prepareStatement(requete);
         ps.setString(1, nomUtilisateur);
         ps.setString(2, motDePasse);
-//        executer les requetes
-        ps.executeQuery();
+        rs = ps.executeQuery();
 
-//        fermer les connections
+        if (rs.next()) {
+            user = new Utilisateurs();
+            user.setIdUtilisateur(rs.getString("idUser"));
+            user.setNomUtilisateur(rs.getString("nomUtilisateur"));
+            user.setMotDePasse(rs.getString("mot_de_passe"));
+            user.setEtat(rs.getString("etat"));
+        }
+
         DBConnection.fermetureCon(rs, ps, con);
-        
-        return new Utilisateurs();
+
+        return user;
     }
 
+    public int inscription(Utilisateurs util) throws ClassNotFoundException, SQLException {
+        int n = 0;
+//        recuperer la connexion
+        con = DBConnection.getConnection();
+//    requete 
+        String requete = "INSERT INTO tabutilisateur(nomUtilisateur, mot_de_passe, etat) VALUES(?, ?, ?)";
+//objet de preparedStatement
+        ps = con.prepareStatement(requete);
+//        passage des parametres
+        ps.setString(1, util.getNomUtilisateur());
+        ps.setString(2, util.getMotDePasse());
+        ps.setString(3, util.getEtat());
+
+        n = ps.executeUpdate();
+//        fermeture de la connexion
+        DBConnection.fermetureCon(rs, ps, con);
+        return n;
+    }
 }

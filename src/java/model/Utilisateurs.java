@@ -52,7 +52,7 @@ public class Utilisateurs {
     }
 
     public void setEtat(String etat) {
-        this.etat = etat;
+        this.etat = "A";
     }
 
 }

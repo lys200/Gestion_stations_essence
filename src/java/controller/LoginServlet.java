@@ -4,25 +4,22 @@
  */
 package controller;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+
 import model.Utilisateurs;
 import traitement.LoginDao;
 
-/**
- *
- * @author BELCEUS
- */
-@WebServlet(name = "ConnectionServlet", urlPatterns = {"/ConnectionServlet"})
+@WebServlet(name = "LoginServlet", urlPatterns = {"/LoginServlet"})
 public class LoginServlet extends HttpServlet {
 
     LoginDao ldao = null;
@@ -79,40 +76,84 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        try {
-            //        processRequest(request, response);
-            connection(request, response);
-        } catch (SQLException ex) {
-            Logger.getLogger(LoginServlet.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(LoginServlet.class.getName()).log(Level.SEVERE, null, ex);
+        String action = request.getParameter("action");
+        switch (action) {
+            case "Connection":
+                recupererInfoFormulaire(request, response);
+                break;
+            case "S'inscrire":
+                inscription(request, response);
+                break;
+            default:
+                System.out.println("redirection");
         }
 
     }
 
-    public void connection(HttpServletRequest request, HttpServletResponse response) 
-            throws SQLException, ClassNotFoundException, ServletException, IOException {
-//        recuperation des parametres du formulaire
+    private void recupererInfoFormulaire(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        //        recuperation des parametres du formulaire
         String nomUtil = request.getParameter("nomutilisateur");
         String modpas = request.getParameter("password");
 //        instancier LoginDao
         ldao = new LoginDao();
         if (nomUtil != null && modpas != null) {
-            
-            Utilisateurs ut = ldao.rechercher(nomUtil, modpas);
-            
-            if(ldao.rechercher(nomUtil, modpas)!= null) {
-                HttpSession session = request.getSession();
-                session.setAttribute("user ", ut);
-                 request.getRequestDispatcher("/index.jsp").forward(request, response);
-            }else{
-                
-            request.setAttribute("Erreur", "Vous devez remplir tous les champs");
-            request.getRequestDispatcher("../connection.jsp");
+
+            try {
+                Utilisateurs ut = ldao.rechercher(nomUtil, modpas);
+
+                if (ut != null) {
+                    HttpSession session = request.getSession();
+                    session.setAttribute("user", ut);
+                    response.sendRedirect(request.getContextPath() + "/index.jsp");
+                } else {
+
+                    request.setAttribute("Erreur", "Cet utilisateur n'existe pas. Veuillez creer un compte");
+                    request.getRequestDispatcher("/connection.jsp").forward(request, response);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(LoginServlet.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(LoginServlet.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         } else {
-            System.out.println("page connection ");
+            response.sendRedirect("connection.jsp");
+        }
+    }
+//    methpde gerer l'inscription
+
+    public void inscription(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        Utilisateurs ut = new Utilisateurs();
+        LoginDao ldao = new LoginDao();
+//       recuperer les names du formulaire
+        String nomUtil = request.getParameter("nomutilisateur");
+        String modpas = request.getParameter("password");
+        if (nomUtil != null && modpas != null) {
+            try {
+                //          creer un utilisateur
+                ut.setNomUtilisateur(nomUtil);
+                ut.setMotDePasse(modpas);
+                ut.setEtat("A");
+                int res = ldao.inscription(ut);
+
+                if (res > 0) {
+                    request.setAttribute("msg", "Inscription réussie. Veuillez vous connecter.");
+                    request.getRequestDispatcher("connection.jsp").forward(request, response);
+                } else {
+                    request.setAttribute("Erreur", "Erreur lors de l'inscription.");
+                    request.getRequestDispatcher("Inscription.jsp").forward(request, response);
+                }
+            } catch (ClassNotFoundException | SQLException ex) {
+                Logger.getLogger(LoginServlet.class.getName()).log(Level.SEVERE, null, ex);
+                request.setAttribute("Erreur", "Ce nom d'utilisateur existe deja dans la base de donnees Veuillez choisir un autre nom et un autre mot de passe.");
+                request.getRequestDispatcher("Inscription.jsp").forward(request, response);
+            }
+        } else {
+            request.setAttribute("Erreur", "Tous les champs sont obligatoires !");
+        request.getRequestDispatcher("Inscription.jsp").forward(request, response);
+
         }
 
     }

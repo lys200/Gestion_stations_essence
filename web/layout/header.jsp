@@ -1,5 +1,7 @@
 <%@page import="model.Utilisateurs"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+
+
 <!DOCTYPE html>
 <html>
     <head>
@@ -15,13 +17,13 @@
                     <li><a href="${pageContext.request.contextPath}/StationServlet">Station</a></li>
                     <li><a href="">Approvisionnement</a></li>
                     <li><a href="">Ventes</a></li>
-                    <li><a href="">Connexion</a></li>
+
                 </ul>
                 <span>
                     <%
-                        Utilisateurs ut = (Utilisateurs) request.getAttribute("user");
+                        Utilisateurs ut = (Utilisateurs) session.getAttribute("user");
                     %>
-                    <%= ut != null ? "Bonjour " + ut.getNomUtilisateur() : ""%> || <a href="url">D&eacute;connexion</a>
+                    <%= ut != null ? "Bonjour " + ut.getNomUtilisateur():""%> | <a href="logout.jsp">D&eacute;connexion</a>
                 </span>
             </nav>
         </header>
