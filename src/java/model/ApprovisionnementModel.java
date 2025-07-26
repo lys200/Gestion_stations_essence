@@ -6,10 +6,8 @@ package model;
 
 import java.util.Date;
 
-/**
- *
- * @author BELCEUS
- */
+
+
 public class ApprovisionnementModel {
     private String idApp;
     private String TypeCarburant;
@@ -20,7 +18,11 @@ public class ApprovisionnementModel {
     
     public ApprovisionnementModel(){}
 
+
+  
+
     public ApprovisionnementModel(String idApp, String TypeCarburant, int quantite, Date dateApprov, String fournisseur, String idStation) {
+
         this.idApp = idApp;
         this.TypeCarburant = TypeCarburant;
         this.quantite = quantite;
@@ -76,5 +78,6 @@ public class ApprovisionnementModel {
     public void setIdStation(String idStation) {
         this.idStation = idStation;
     }
+
     
 }

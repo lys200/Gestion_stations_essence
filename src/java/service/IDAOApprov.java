@@ -1,14 +1,18 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Interface.java to edit this template
- */
 package service;
 
-/**
- *
- * @author BELCEUS
- */
-public interface IDAOApprov <T>{
-    int enregistrerLivraison(T e);
-    int modifierNiveau(T e);
+import model.ApprovisionnementModel;
+import model.StationModel;
+
+import java.sql.SQLException;
+import java.util.List;
+
+public interface IDAOApprov {
+
+    int enregistrerAvecMajStock(ApprovisionnementModel approv) throws SQLException, ClassNotFoundException;
+
+    List<ApprovisionnementModel> listerApprovisionnementsFiltres(java.util.Map<String, Object> filtres) throws SQLException, ClassNotFoundException;
+
+    List<StationModel> listerStations() throws SQLException, ClassNotFoundException;
+
+    boolean stationExiste(String idStation) throws SQLException, ClassNotFoundException;
 }

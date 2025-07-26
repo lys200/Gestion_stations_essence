@@ -9,6 +9,10 @@ package model;
  * @author BELCEUS
  */
 public class StationModel {
+
+    public static StationModel getStationById(int stationId) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
     private String idStation;
     private String adresseGeog;
     private double capaciteStockGasoline;
