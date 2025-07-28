@@ -125,9 +125,9 @@ public class StationDAO implements IDAOStation<StationModel> {
 //utilisation de resultSet
         rs = ps.executeQuery();
 //        parcourir le resultSet
-        StationModel sm = new StationModel();
+        StationModel sm = null;
         if (rs.next()) {
-
+            sm = new StationModel();
             sm.setIdStation(rs.getString("IdStation"));
             sm.setAdresseGeog(rs.getString("AdresseGeog"));
             sm.setCapaciteStockGasoline(rs.getDouble("capaciteStockGasoline"));

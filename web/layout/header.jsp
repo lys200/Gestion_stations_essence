@@ -1,6 +1,13 @@
 <%@page import="model.Utilisateurs"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 
+<%
+    Utilisateurs ut = (Utilisateurs) session.getAttribute("user");
+    if (ut == null) {
+        response.sendRedirect("connection.jsp");
+        return;
+    }
+%>
 
 <!DOCTYPE html>
 <html>
@@ -20,9 +27,6 @@
 
                 </ul>
                 <span>
-                    <%
-                        Utilisateurs ut = (Utilisateurs) session.getAttribute("user");
-                    %>
                     <%= ut != null ? "Bonjour " + ut.getNomUtilisateur():""%> | <a href="logout.jsp">D&eacute;connexion</a>
                 </span>
             </nav>

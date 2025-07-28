@@ -13,6 +13,6 @@ import java.util.List;
  */
 public interface IDAOVentes <T> {
     int enregistrerVente(T e) throws ClassNotFoundException, SQLException;
-    void calculRevenuVente() throws ClassNotFoundException, SQLException;
+    double calculRevenuVente() throws ClassNotFoundException, SQLException;
     List<T> listerVente() throws ClassNotFoundException, SQLException;
 }

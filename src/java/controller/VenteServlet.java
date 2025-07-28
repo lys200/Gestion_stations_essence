@@ -95,44 +95,60 @@ public class VenteServlet extends HttpServlet {
 
     public void enregistrerVentes(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-       
-            String qteVendu = request.getParameter("qtev");
-            String typecarburant = request.getParameter("typecarburant");
-            String dateV = request.getParameter("datevente");
-            String prixVente = request.getParameter("prix");
-            String idStation = request.getParameter("idStation");
+
+        String qteVendu = request.getParameter("qtev");
+        String typecarburant = request.getParameter("typecarburant");
+        String dateV = request.getParameter("datevente");
+        String prixVente = request.getParameter("prix");
+        String idStation = request.getParameter("idStation");
 //            verifier que idstation existe
-StationDAO sdao = new StationDAO();
+        StationDAO sdao = new StationDAO();
         try {
             StationModel smod = sdao.rechercher(idStation);
-            if(smod == null){
+            if (smod == null) {
                 request.setAttribute("msg", "Idstation inexistant.");
                 request.getRequestDispatcher("/Ventes/AjoutVentes.jsp").forward(request, response);
                 return;
             }
-            
+
         } catch (ClassNotFoundException | SQLException ex) {
             Logger.getLogger(VenteServlet.class.getName()).log(Level.SEVERE, null, ex);
-        } 
+        }
 //            convertion des parametres
-            double qvendu = Double.parseDouble(qteVendu);
-            double prixv = Double.parseDouble(prixVente);
-            if(prixv < 0){
-                request.setAttribute("erreur", "le prix ne doit pas etre inferieur a zero.");
-                request.getRequestDispatcher("/Ventes/AjoutVentes.jsp").forward(request, response);
-                return;
-            }
-            java.sql.Date datevant = java.sql.Date.valueOf(dateV);
-//        instance dr ventemodel
-            vm = new VentesModel();
+        double qvendu = Double.parseDouble(qteVendu);
+        if (qvendu <= 0) {
+            request.setAttribute("msg", "La quantite vendu ne peut pas etre inferieure ou egal a zero");
+            request.getRequestDispatcher("/Ventes/AjoutVentes.jsp").forward(request, response);
+            return;
+        }
+        double prixv = Double.parseDouble(prixVente);
+        if (prixv <= 0) {
+            request.setAttribute("msg", "le prix ne doit pas etre inferieur ou egal a zero.");
+            request.getRequestDispatcher("/Ventes/AjoutVentes.jsp").forward(request, response);
+            return;
+        }
+//        traitement de la date pour la vente 
+        java.sql.Date datevant;
+        if (dateV == null || dateV.isEmpty()) {
 
-            vm.setQuantiteVendu((int)qvendu);
-            vm.setTypeCarburantVente(typecarburant);
-            vm.setPrixVente(prixv);
-            vm.setDateVente(datevant);
-            vm.setIdStation(idStation);
+            long millis = System.currentTimeMillis();
+            datevant = new java.sql.Date(millis);
+        } else {
+
+            datevant = java.sql.Date.valueOf(dateV);
+        }
+        double prixTotal = qvendu * prixv;
+//        instance dr ventemodel
+        vm = new VentesModel();
+
+        vm.setQuantiteVendu(qvendu);
+        vm.setTypeCarburantVente(typecarburant);
+        vm.setPrixVente(prixv);
+        vm.setDateVente(datevant);
+        vm.setIdStation(idStation);
+
 //        instance de ventes dao 
-            vdao = new VentesDAO();
+        vdao = new VentesDAO();
         try {
             if (vdao.enregistrerVente(vm) > 0) {
                 request.setAttribute("msg", "enregistrement succes");
@@ -146,7 +162,6 @@ StationDAO sdao = new StationDAO();
         } catch (SQLException ex) {
             Logger.getLogger(VenteServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
 
     }
 //methode pour load les donnees de ventes 
@@ -156,17 +171,18 @@ StationDAO sdao = new StationDAO();
         try {
             vdao = new VentesDAO();
             List<VentesModel> lvmod = vdao.listerVente();
+            // Calcul du revenu total toutes stations
+            double revenuTotal = vdao.calculRevenuVente();
+
+            // Passer les ventes et le revenu total à la JSP
             request.setAttribute("ventes", lvmod);
+            request.setAttribute("revenuTotal", revenuTotal);
+
             request.getRequestDispatcher("/Ventes/index.jsp").forward(request, response);
 
         } catch (ClassNotFoundException | SQLException ex) {
             Logger.getLogger(StationServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-//    methode afficher revenu
-
-    public void afficherRevenuVente() {
-
     }
 
     /**

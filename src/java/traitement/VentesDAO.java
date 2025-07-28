@@ -48,8 +48,18 @@ public class VentesDAO implements IDAOVentes<VentesModel> {
     }
 
     @Override
-    public void calculRevenuVente() throws ClassNotFoundException, SQLException {
-
+    public double calculRevenuVente() throws ClassNotFoundException, SQLException {
+        double revenuTotal = 0;
+        String sql = "SELECT SUM(quantiteVendu * prixVente) AS revenuTotal FROM tabventes";
+        try (
+                Connection con = DBConnection.getConnection(); 
+                 PreparedStatement ps = con.prepareStatement(sql); 
+                ResultSet rs = ps.executeQuery();) {
+            if (rs.next()) {
+                revenuTotal = rs.getDouble("revenuTotal");
+            }
+        }
+        return revenuTotal;
     }
 
     @Override
@@ -68,9 +78,9 @@ public class VentesDAO implements IDAOVentes<VentesModel> {
         VentesModel vm = null;
         while (rs.next()) {
             vm = new VentesModel();
-            
+
             vm.setIdVente(rs.getString("idVente"));
-            vm.setQuantiteVendu(rs.getInt("quantiteVendu"));
+            vm.setQuantiteVendu(rs.getDouble("quantiteVendu"));
             vm.setTypeCarburantVente(rs.getString("typeCarburantVente"));
             vm.setDateVente(rs.getDate("dateVente"));
             vm.setPrixVente(rs.getDouble("prixVente"));

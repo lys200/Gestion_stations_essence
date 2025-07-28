@@ -11,14 +11,16 @@ import java.util.Date;
  * @author BELCEUS
  */
 public class VentesModel {
+
     private String idVente;
     private double quantiteVendu;
     private String TypeCarburantVente;
     private Date DateVente;
     private double prixVente;
     private String idStation;
-    
-    public VentesModel(){}
+
+    public VentesModel() {
+    }
 
     public VentesModel(String idVente, double quantiteVendu, String TypeCarburantVente, Date DateVente, double prixVente, String idStation) {
         this.idVente = idVente;
@@ -41,7 +43,7 @@ public class VentesModel {
         return quantiteVendu;
     }
 
-    public void setQuantiteVendu(int quantiteVendu) {
+    public void setQuantiteVendu(double quantiteVendu) {
         this.quantiteVendu = quantiteVendu;
     }
 
@@ -76,6 +78,10 @@ public class VentesModel {
     public void setIdStation(String idStation) {
         this.idStation = idStation;
     }
-    
+
+    public double getPrixTotal() {
+        return this.quantiteVendu * this.prixVente;
+    }
+
     
 }

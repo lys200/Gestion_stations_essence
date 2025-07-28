@@ -16,7 +16,7 @@
                 <th>DATE DE VENTE</th>
                 <th>PRIX DE VENTE</th>
                 <th>IDSTATION</th>
-<!--                <th>ACTION</th>-->
+                <th>PRIX TOTAL </th>
             </tr>
         </thead>
         <tbody>
@@ -32,7 +32,8 @@
                 <td><%= vtm.getDateVente() %></td>
                 <td><%= vtm.getPrixVente() %></td>
                 <td><%= vtm.getIdStation() %></td>
-             
+                <td><%= String.format("%.2f", vtm.getPrixTotal()) %> Gourdes </td>
+
             </tr>
              <%
             }
@@ -46,6 +47,9 @@
     %>
         </tbody>
     </table>
+        
+        <h3>Revenu total généré par toutes les ventes : ${revenuTotal} Gourdes</h3>
+
 </div>
 
 <%@include file="../layout/footer.jsp" %>
