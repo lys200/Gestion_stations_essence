@@ -12,19 +12,21 @@ import java.util.Date;
  */
 public class VentesModel {
     private String idVente;
-    private int quantiteVendu;
+    private double quantiteVendu;
     private String TypeCarburantVente;
     private Date DateVente;
     private double prixVente;
+    private String idStation;
     
     public VentesModel(){}
 
-    public VentesModel(String idVente, int quantiteVendu, String TypeCarburantVente, Date DateVente, double prixVente) {
+    public VentesModel(String idVente, double quantiteVendu, String TypeCarburantVente, Date DateVente, double prixVente, String idStation) {
         this.idVente = idVente;
         this.quantiteVendu = quantiteVendu;
         this.TypeCarburantVente = TypeCarburantVente;
         this.DateVente = DateVente;
         this.prixVente = prixVente;
+        this.idStation = idStation;
     }
 
     public String getIdVente() {
@@ -35,7 +37,7 @@ public class VentesModel {
         this.idVente = idVente;
     }
 
-    public int getQuantiteVendu() {
+    public double getQuantiteVendu() {
         return quantiteVendu;
     }
 
@@ -65,6 +67,14 @@ public class VentesModel {
 
     public void setPrixVente(double prixVente) {
         this.prixVente = prixVente;
+    }
+
+    public String getIdStation() {
+        return idStation;
+    }
+
+    public void setIdStation(String idStation) {
+        this.idStation = idStation;
     }
     
     

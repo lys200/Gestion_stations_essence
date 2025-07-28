@@ -126,7 +126,7 @@ public class LoginServlet extends HttpServlet {
     public void inscription(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         Utilisateurs ut = new Utilisateurs();
-        LoginDao ldao = new LoginDao();
+        ldao = new LoginDao();
 //       recuperer les names du formulaire
         String nomUtil = request.getParameter("nomutilisateur");
         String modpas = request.getParameter("password");

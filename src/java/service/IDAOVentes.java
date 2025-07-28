@@ -4,11 +4,15 @@
  */
 package service;
 
+import java.sql.SQLException;
+import java.util.List;
+
 /**
  *
  * @author BELCEUS
  */
 public interface IDAOVentes <T> {
-    int enregistrerVente(T e);
-    double calculRevenuVente();
+    int enregistrerVente(T e) throws ClassNotFoundException, SQLException;
+    void calculRevenuVente() throws ClassNotFoundException, SQLException;
+    List<T> listerVente() throws ClassNotFoundException, SQLException;
 }

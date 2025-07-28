@@ -4,13 +4,22 @@
  */
 package controller;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import model.StationModel;
+
+import model.VentesModel;
+import traitement.StationDAO;
+import traitement.VentesDAO;
 
 /**
  *
@@ -18,6 +27,9 @@ import javax.servlet.http.HttpServletResponse;
  */
 @WebServlet(name = "VenteServlet", urlPatterns = {"/VenteServlet"})
 public class VenteServlet extends HttpServlet {
+
+    VentesModel vm = null;
+    VentesDAO vdao = null;
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -36,7 +48,7 @@ public class VenteServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet VenteServlet</title>");            
+            out.println("<title>Servlet VenteServlet</title>");
             out.println("</head>");
             out.println("<body>");
             out.println("<h1>Servlet VenteServlet at " + request.getContextPath() + "</h1>");
@@ -57,7 +69,7 @@ public class VenteServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        loadVente(request, response);
     }
 
     /**
@@ -71,7 +83,90 @@ public class VenteServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        String action = request.getParameter("action");
+        switch (action) {
+            case "Ajouter_ventes":
+                enregistrerVentes(request, response);
+                break;
+            default:
+                loadVente(request, response);
+        }
+    }
+
+    public void enregistrerVentes(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+       
+            String qteVendu = request.getParameter("qtev");
+            String typecarburant = request.getParameter("typecarburant");
+            String dateV = request.getParameter("datevente");
+            String prixVente = request.getParameter("prix");
+            String idStation = request.getParameter("idStation");
+//            verifier que idstation existe
+StationDAO sdao = new StationDAO();
+        try {
+            StationModel smod = sdao.rechercher(idStation);
+            if(smod == null){
+                request.setAttribute("msg", "Idstation inexistant.");
+                request.getRequestDispatcher("/Ventes/AjoutVentes.jsp").forward(request, response);
+                return;
+            }
+            
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(VenteServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } 
+//            convertion des parametres
+            double qvendu = Double.parseDouble(qteVendu);
+            double prixv = Double.parseDouble(prixVente);
+            if(prixv < 0){
+                request.setAttribute("erreur", "le prix ne doit pas etre inferieur a zero.");
+                request.getRequestDispatcher("/Ventes/AjoutVentes.jsp").forward(request, response);
+                return;
+            }
+            java.sql.Date datevant = java.sql.Date.valueOf(dateV);
+//        instance dr ventemodel
+            vm = new VentesModel();
+
+            vm.setQuantiteVendu((int)qvendu);
+            vm.setTypeCarburantVente(typecarburant);
+            vm.setPrixVente(prixv);
+            vm.setDateVente(datevant);
+            vm.setIdStation(idStation);
+//        instance de ventes dao 
+            vdao = new VentesDAO();
+        try {
+            if (vdao.enregistrerVente(vm) > 0) {
+                request.setAttribute("msg", "enregistrement succes");
+                loadVente(request, response);
+            } else {
+                request.setAttribute("msg", "Échec de l'enregistrement !");
+                request.getRequestDispatcher("/Ventes/index.jsp").forward(request, response);
+            }
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(VenteServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(VenteServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+
+    }
+//methode pour load les donnees de ventes 
+
+    public void loadVente(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            vdao = new VentesDAO();
+            List<VentesModel> lvmod = vdao.listerVente();
+            request.setAttribute("ventes", lvmod);
+            request.getRequestDispatcher("/Ventes/index.jsp").forward(request, response);
+
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(StationServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+//    methode afficher revenu
+
+    public void afficherRevenuVente() {
+
     }
 
     /**

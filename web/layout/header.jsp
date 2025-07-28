@@ -16,7 +16,7 @@
                     <li><a href="index.jsp">Accueil</a></li>
                     <li><a href="${pageContext.request.contextPath}/StationServlet">Station</a></li>
                     <li><a href="${pageContext.request.contextPath}/ApprovServlet">Approvisionnement</a></li>
-                    <li><a href="">Ventes</a></li>
+                    <li><a href="${pageContext.request.contextPath}/VenteServlet">Ventes</a></li>
 
                 </ul>
                 <span>
